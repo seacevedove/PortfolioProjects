@@ -99,43 +99,58 @@ SET State = STUFF("Shipping City", 1, LEN("Shipping City") + 2 - CHARINDEX(',', 
 
 --------------------------------------------------------------------------------------------------------------------------
 
--- Correcteted values in "City" & "State" fields
+-- Case Statement: Correcteted values in "City" & "State" fields
 
-SELECT Distinct(State), Count(State)
+SELECT Distinct(State)--, Count(State)
 From PortfolioProject.dbo.Linio
-Group by State
+--Group by State
 Order by 1
 
-Select State
-, CASE When State = 'Bogota D.c' THEN 'Bogota D.C.'
-	   ELSE State
-	   END
+Select State, 
+CASE When State = 'Bogota D.c' THEN 'Bogotá D.C.'
+     When State = 'Norte De Santander' THEN 'N. de Santander'
+     When State = 'Guajira' THEN 'La Guajira'
+     ELSE State
+     END
 From PortfolioProject.dbo.Linio
 
 Update PortfolioProject.dbo.Linio
-SET State = CASE WHEN State = 'Bogota D.c' THEN 'Bogota D.C.'
-	   ELSE State
-	   END
+SET State = CASE When State = 'Bogota D.c' THEN 'Bogotá D.C.'
+     When State = 'Norte De Santander' THEN 'N. de Santander'
+     When State = 'Guajira' THEN 'La Guajira'
+     ELSE State
+     END
 
-SELECT Distinct(City), Count(City)
+SELECT DISTINCT (City)--, Count(City)
 From PortfolioProject.dbo.Linio
-Group by City
+--Group by City
 Order by 1
 
-Select City
-, CASE When State = 'Bogota D.C.' THEN 'Bogota D.C.'
-	   When City = 'Itagui' THEN 'Itagüí'
-	   WHEN City = 'Medellin' THEN 'Medellín'
-	   ELSE City
-	   END
+Select City, 
+CASE WHEN State = 'Bogotá D.C.' THEN 'Bogotá D.C.'
+     WHEN City = 'Águila' THEN 'El Águila'
+     WHEN City = 'Cartagena' THEN 'Cartagena De Indias'
+     WHEN City = 'Itagui' THEN 'Itagüí'
+     WHEN City = 'Itaguí' THEN 'Itagüí'
+     WHEN City = 'Medellin' THEN 'Medellín'
+     WHEN City = 'San Antonio de Prado' THEN 'Medellín'
+     WHEN City = 'Ubaté' THEN 'Villa de San Diego de Ubaté'	
+     ELSE City
+     END
 From PortfolioProject.dbo.Linio
 
 Update PortfolioProject.dbo.Linio
-SET City = CASE When State = 'Bogota D.C.' THEN 'Bogota D.C.'
-				When City = 'Itagui' THEN 'Itagüí'
-				WHEN City = 'Medellin' THEN 'Medellín'
-	   ELSE City
-	   END
+SET City = CASE WHEN State = 'Bogotá D.C.' THEN 'Bogotá D.C.'
+     WHEN City = 'Águila' THEN 'El Águila'
+     WHEN City = 'Cartagena' THEN 'Cartagena De Indias'
+     WHEN City = 'Itagui' THEN 'Itagüí'
+     WHEN City = 'Itaguí' THEN 'Itagüí'
+     WHEN City = 'Medellin' THEN 'Medellín'
+     WHEN City = 'San Antonio de Prado' THEN 'Medellín'
+     WHEN City = 'Ubaté' THEN 'Villa de San Diego de Ubaté'	
+     ELSE City
+     END
+From PortfolioProject.dbo.Linio
 
 --------------------------------------------------------------------------------------------------------------------------
 
