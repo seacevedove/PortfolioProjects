@@ -99,7 +99,7 @@ SET State = STUFF("Shipping City", 1, LEN("Shipping City") + 2 - CHARINDEX(',', 
 
 --------------------------------------------------------------------------------------------------------------------------
 
--- Correctetion to values in "City" & "State" fields
+-- Correcteted values in "City" & "State" fields
 
 SELECT Distinct(State), Count(State)
 From PortfolioProject.dbo.Linio
@@ -124,16 +124,16 @@ Order by 1
 
 Select City
 , CASE When State = 'Bogota D.C.' THEN 'Bogota D.C.'
-	   When City = 'Itagui' THEN 'Itagüí'
-	   WHEN City = 'Medellin' THEN 'Medellín'
+	   When City = 'Itagui' THEN 'ItagÃ¼Ã­'
+	   WHEN City = 'Medellin' THEN 'MedellÃ­n'
 	   ELSE City
 	   END
 From PortfolioProject.dbo.Linio
 
 Update PortfolioProject.dbo.Linio
 SET City = CASE When State = 'Bogota D.C.' THEN 'Bogota D.C.'
-				When City = 'Itagui' THEN 'Itagüí'
-				WHEN City = 'Medellin' THEN 'Medellín'
+				When City = 'Itagui' THEN 'ItagÃ¼Ã­'
+				WHEN City = 'Medellin' THEN 'MedellÃ­n'
 	   ELSE City
 	   END
 
@@ -333,14 +333,14 @@ Group by "Document Type"
 Order by 1
 
 Select "Document Type"
-, CASE WHEN "Document Type" = 'CÃ©dula de CiudadanÃ­a-13' THEN 'Cédula de ciudadanía'
-	   ELSE 'Cédula de ciudadanía'
+, CASE WHEN "Document Type" = 'CÃƒÂ©dula de CiudadanÃƒÂ­a-13' THEN 'CÃ©dula de ciudadanÃ­a'
+	   ELSE 'CÃ©dula de ciudadanÃ­a'
 	   END
 From PortfolioProject.dbo.Linio
 
 Update PortfolioProject.dbo.Linio
-SET "Document Type" = CASE WHEN "Document Type" = 'CÃ©dula de CiudadanÃ­a-13' THEN 'Cédula de ciudadanía'
-	   ELSE 'Cédula de ciudadanía'
+SET "Document Type" = CASE WHEN "Document Type" = 'CÃƒÂ©dula de CiudadanÃƒÂ­a-13' THEN 'CÃ©dula de ciudadanÃ­a'
+	   ELSE 'CÃ©dula de ciudadanÃ­a'
 	   END
 
 -----------------------------------------------------------------------------------------------------------------------------------------------------------
