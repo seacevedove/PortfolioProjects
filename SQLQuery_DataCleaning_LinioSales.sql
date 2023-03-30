@@ -4,30 +4,15 @@ Cleaning Data in SQL Queries
 
 Select *
 From PortfolioProject.dbo.Linio
+ORDER BY "Created at" DESC
 
 ---------------------------------------------------------------------------------------------------------
 
--- Deleting canceled or failed orders.
-
-Select Status, "Order Item Id", "Order Number"--, COUNT(Status)
-From PortfolioProject.dbo.Linio
-WHERE STATUS <> 'delivered' and STATUS <> 'ready_to_ship' and STATUS <> 'shipped'
---GROUP BY Status
-ORDER BY 1
+-- Remove outdated information
 
 --DELETE
---From PortfolioProject.dbo.Linio
---WHERE Status in ('canceled', 'failed')
-
---------------------------------------------------------------------------------------------------------------------------
-
--- Selecting dispatch location.
-
-Select *
-From PortfolioProject.dbo.Linio
---Where "Shipment Type Name" = 'Own Warehouse'
-Where "Shipment Type Name" = 'Dropshipping'
-Order by "Created at" Desc
+--FROM PortfolioProject.dbo.Linio
+--Where "Created at" NOT LIKE '2023-03%'
 
 --------------------------------------------------------------------------------------------------------------------------
 
@@ -46,6 +31,30 @@ SET "Created at" = CONVERT(Date, "Created at")
 --Update PortfolioProject.dbo.Linio
 --SET CreatedAt = CONVERT(Date, "Created at")
 
+---------------------------------------------------------------------------------------------------------
+
+-- Deleting canceled or failed orders.
+
+Select Status, "Order Item Id", "Order Number"--, COUNT(Status)
+From PortfolioProject.dbo.Linio
+WHERE STATUS NOT IN ('delivered', 'ready_to_ship', 'shipped', 'pending')
+--WHERE STATUS <> 'delivered' and STATUS <> 'ready_to_ship' and STATUS <> 'shipped'
+--GROUP BY Status
+ORDER BY 1
+
+--DELETE
+--From PortfolioProject.dbo.Linio
+--WHERE Status in ('canceled', 'failed')
+
+--------------------------------------------------------------------------------------------------------------------------
+
+-- Selecting dispatch location.
+
+Select *
+From PortfolioProject.dbo.Linio
+--Where "Shipment Type Name" = 'Own Warehouse'
+Where "Shipment Type Name" = 'Dropshipping'
+Order by "Created at" Desc
 --------------------------------------------------------------------------------------------------------------------------
 
 -- Concatenate shipping address columns into a string.
@@ -63,18 +72,15 @@ ADD Neighborhood NVARCHAR(100)
 UPDATE PortfolioProject.dbo.Linio
 SET Neighborhood = LEFT("Shipping Address2", CHARINDEX(',', "Shipping Address2" + ',') - 1)
 
-SELECT "Shipping Address", Neighborhood, "Shipping Address4"
-	,CONCAT("Shipping Address",' ',Neighborhood,' ',"Shipping Address4") as ShippingAddress
+SELECT "Shipping Address", Neighborhood, "Shipping Address4",
+	CONCAT("Shipping Address",' ',Neighborhood,' ',"Shipping Address4") as ShippingAddress
 FROM PortfolioProject.dbo.Linio
 
 ALTER TABLE PortfolioProject.dbo.Linio
-ADD ShippingAddress NVARCHAR(200)
+ADD ShippingAddress NVARCHAR(355)
 
 UPDATE PortfolioProject.dbo.Linio
 SET ShippingAddress = CONCAT("Shipping Address",' ',Neighborhood,' ',"Shipping Address4")
-
-SELECT *
-FROM PortfolioProject.dbo.Linio
 
 --------------------------------------------------------------------------------------------------------------------------
 
@@ -314,7 +320,7 @@ FROM PortfolioProject.dbo.Linio
 ORDER BY 1
 
 ALTER TABLE PortfolioProject.dbo.Linio
-ADD "Unit Price Before Tax" NVARCHAR(50)
+ADD "Unit Price Before Tax" FLOAT
 
 UPDATE PortfolioProject.dbo.Linio
 SET "Unit Price Before Tax" = CAST("Unit Price" AS DECIMAL(10, 2))/1.19
@@ -326,37 +332,67 @@ SET "Unit Price Before Tax" = CAST("Unit Price Before Tax" AS DECIMAL(10, 2))
 
 -- Fixing values in "Fiscal Person" & "Document Type" fields
 
-SELECT Distinct("Fiscal Person"), Count("Fiscal Person")
+SELECT "Fiscal Person", Count("Fiscal Person")
 From PortfolioProject.dbo.Linio
 Group by "Fiscal Person"
 Order by 1
 
-Select "Fiscal Person"
-, CASE WHEN "Fiscal Person" = 'Persona Natural-2' THEN 'Natural'
-	   ELSE 'Natural'
-	   END
+Select "Fiscal Person", 
+CASE WHEN "Fiscal Person" = 'Persona Juridica-1' THEN 'Jurídica'
+	 ELSE 'Natural'
+	 END
 From PortfolioProject.dbo.Linio
 
 Update PortfolioProject.dbo.Linio
-SET "Fiscal Person" = CASE WHEN "Fiscal Person" = 'Persona Natural-2' THEN 'Natural'
-	   ELSE 'Natural'
-	   END
+SET "Fiscal Person" = CASE WHEN "Fiscal Person" = 'Persona Juridica-1' THEN 'Jurídica'
+	 ELSE 'Natural'
+	 END
 
-SELECT Distinct("Document Type"), Count("Document Type")
-From PortfolioProject.dbo.Linio
-Group by "Document Type"
-Order by 1
+SELECT "Document Type", Count("Document Type")
+FROM PortfolioProject.dbo.Linio
+GROUP BY "Document Type"
+ORDER BY 2 DESC
 
-Select "Document Type"
-, CASE WHEN "Document Type" = 'CÃ©dula de CiudadanÃ­a-13' THEN 'Cédula de ciudadanía'
-	   ELSE 'Cédula de ciudadanía'
-	   END
+Select "Document Type", 
+CASE WHEN "Document Type" = 'CÃ©dula de CiudadanÃ­a-13' THEN 'Cédula de ciudadanía'
+     WHEN "Document Type" = 'CÃ©dula de ExtranjerÃ­a-22' THEN 'Cédula de extranjería'
+	 WHEN "Document Type" = 'Tarjeta de Identidad-12' THEN 'Tarjeta de identidad'
+	 WHEN "Document Type" = 'NIT-31' THEN 'Número de identificación tributaria'	   
+	 WHEN "Document Type" = 'Tarjeta de Extranjeria-21' THEN 'Tarjeta de extranjería'
+	 WHEN "Document Type" = 'Registro Civil-11' THEN 'Registro civil'
+	 WHEN "Document Type" = 'Pasaporte-41' THEN 'Pasaporte'
+	 ELSE 'Cédula de ciudadanía'
+	 END
 From PortfolioProject.dbo.Linio
 
 Update PortfolioProject.dbo.Linio
 SET "Document Type" = CASE WHEN "Document Type" = 'CÃ©dula de CiudadanÃ­a-13' THEN 'Cédula de ciudadanía'
-	   ELSE 'Cédula de ciudadanía'
-	   END
+     WHEN "Document Type" = 'CÃ©dula de ExtranjerÃ­a-22' THEN 'Cédula de extranjería'
+	 WHEN "Document Type" = 'Tarjeta de Identidad-12' THEN 'Tarjeta de identidad'
+	 WHEN "Document Type" = 'NIT-31' THEN 'Número de identificación tributaria'	   
+	 WHEN "Document Type" = 'Tarjeta de Extranjeria-21' THEN 'Tarjeta de extranjería'
+	 WHEN "Document Type" = 'Registro Civil-11' THEN 'Registro civil'
+	 WHEN "Document Type" = 'Pasaporte-41' THEN 'Pasaporte'
+	 ELSE 'Cédula de ciudadanía'
+	 END
+
+-- Tax Responsibility
+
+SELECT "Customer Name",
+CASE WHEN "Customer Name" LIKE 'Iglesia%' THEN 'No responsable del IVA'
+     WHEN "Fiscal Person" = 'Jurídica' THEN  'Responsable del IVA' 
+	 ELSE 'No responsable del IVA'
+	 END
+FROM PortfolioProject.dbo.Linio
+
+ALTER TABLE PortfolioProject.dbo.Linio
+ADD "Tax Responsibility" NVARCHAR(225)
+
+UPDATE PortfolioProject.dbo.Linio
+SET "Tax Responsibility" = CASE WHEN "Customer Name" LIKE 'Iglesia%' THEN 'No responsable del IVA'
+     WHEN "Fiscal Person" = 'Jurídica' THEN  'Responsable del IVA' 
+	 ELSE 'No responsable del IVA'
+	 END
 
 -----------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -364,11 +400,10 @@ SET "Document Type" = CASE WHEN "Document Type" = 'CÃ©dula de CiudadanÃ­a-13
 
 Select *
 From PortfolioProject.dbo.Linio
-Order by "Created at"
+Order by "Created at" DESC
 
 ALTER TABLE PortfolioProject.dbo.Linio
-DROP COLUMN 
---"Shipping Address2", "Shipping Address4", "Billing Phone Number2",  "Billing Country", "Neighborhood", "Linio Id", "Billing Name", "Item Name", "Unit Price",  "Linio SKU", "Paid Price", "Receiver Legal Name", "Receiver Address", "Customer Name", "Billing Address", "Billing Address2", "Shipping Address3", "Shipping Address5", "Shipping Fee", "Shipping Name", "Updated at", "Order Source", "Invoice Required","Order Currency", "Shipping City", "Shipping Postcode", "Billing Address3", "Billing Address4", "Billing Address5", "Shipping Phone Number", "Shipping Phone Number2", "Billing City",  "Billing Postcode", "Payment Means ID", "Payment Means ID Code", "Tax Scheme Code", "Payer Obligations Code", "Customer Verifier Digit", "Receiver Type Regimen", "Receiver Postcode", "Receiver Commercial Name", "Receiver Region", "Receiver Municipality", "English name", "Reason", "Premium", "Promised shipping time", "Tracking URL", "Tracking Code", "CD Tracking Code", "Shipping Provider Type", "Shipping Provider", "CD Shipping Provider", "Variation", "Wallet Credits", "Payment Method"
+DROP COLUMN "Shipping Address2", "Shipping Address4", "Billing Phone Number2",  "Billing Country", "Neighborhood", "Linio Id", "Billing Name", "Item Name", "Unit Price",  "Linio SKU", "Paid Price", "Receiver Legal Name", "Receiver Address", "Customer Name", "Billing Address", "Billing Address2", "Shipping Address3", "Shipping Address5", "Shipping Fee", "Shipping Name", "Updated at", "Order Source", "Invoice Required","Order Currency", "Shipping City", "Shipping Postcode", "Billing Address3", "Billing Address4", "Billing Address5", "Shipping Phone Number", "Shipping Phone Number2", "Billing City",  "Billing Postcode", "Payment Means ID", "Payment Means ID Code", "Tax Scheme Code", "Payer Obligations Code", "Customer Verifier Digit", "Receiver Type Regimen", "Receiver Postcode", "Receiver Commercial Name", "Receiver Region", "Receiver Municipality", "English name", "Reason", "Premium", "Promised shipping time", "Tracking URL", "Tracking Code", "CD Tracking Code", "Shipping Provider Type", "Shipping Provider", "CD Shipping Provider", "Variation", "Wallet Credits", "Payment Method"
 
 ---------------------------------------------------------------------------------------------------------
 
@@ -392,4 +427,3 @@ Order by "National Registration Number"
 --Delete 
 --From RowNumCTE
 --Where RowNum > 1
-
