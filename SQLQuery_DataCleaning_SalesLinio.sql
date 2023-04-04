@@ -31,21 +31,6 @@ SET "Created at" = CONVERT(Date, "Created at")
 --Update PortfolioProject.dbo.Linio
 --SET CreatedAt = CONVERT(Date, "Created at")
 
----------------------------------------------------------------------------------------------------------
-
--- Deleting canceled or failed orders.
-
-Select Status, "Order Item Id", "Order Number"--, COUNT(Status)
-From PortfolioProject.dbo.Linio
-WHERE STATUS NOT IN ('delivered', 'ready_to_ship', 'shipped', 'pending')
---WHERE STATUS <> 'delivered' and STATUS <> 'ready_to_ship' and STATUS <> 'shipped'
---GROUP BY Status
-ORDER BY 1
-
---DELETE
---From PortfolioProject.dbo.Linio
---WHERE Status in ('canceled', 'failed')
-
 --------------------------------------------------------------------------------------------------------------------------
 
 -- Selecting dispatch location.
@@ -59,28 +44,22 @@ Order by "Created at" Desc
 
 -- Concatenate shipping address columns into a string.
 
-SELECT "Shipping Address", "Shipping Address2", "Shipping Address4"
-FROM PortfolioProject.dbo.Linio
-
 SELECT "Shipping Address2",
 	   LEFT("Shipping Address2", CHARINDEX(',', "Shipping Address2" + ',') - 1) AS Neighborhood
 FROM PortfolioProject.dbo.Linio
 
-ALTER TABLE PortfolioProject.dbo.Linio
-ADD Neighborhood NVARCHAR(100)
-
 UPDATE PortfolioProject.dbo.Linio
-SET Neighborhood = LEFT("Shipping Address2", CHARINDEX(',', "Shipping Address2" + ',') - 1)
+SET "Shipping Address2" = LEFT("Shipping Address2", CHARINDEX(',', "Shipping Address2" + ',') - 1)
 
-SELECT "Shipping Address", Neighborhood, "Shipping Address4",
-	CONCAT("Shipping Address",' ',Neighborhood,' ',"Shipping Address4") as ShippingAddress
+SELECT "Shipping Address", "Shipping Address2", "Shipping Address4",
+	CONCAT("Shipping Address",' ',"Shipping Address2",' ',"Shipping Address4") as ShippingAddress
 FROM PortfolioProject.dbo.Linio
 
 ALTER TABLE PortfolioProject.dbo.Linio
 ADD ShippingAddress NVARCHAR(355)
 
 UPDATE PortfolioProject.dbo.Linio
-SET ShippingAddress = CONCAT("Shipping Address",' ',Neighborhood,' ',"Shipping Address4")
+SET ShippingAddress = CONCAT("Shipping Address",' ',"Shipping Address2",' ',"Shipping Address4")
 
 --------------------------------------------------------------------------------------------------------------------------
 
@@ -92,13 +71,10 @@ SELECT "Shipping City",
 FROM PortfolioProject.dbo.Linio
 
 ALTER TABLE PortfolioProject.dbo.Linio
-Add City NVARCHAR(100)
+Add City NVARCHAR(255), State NVARCHAR(255)
 
 UPDATE PortfolioProject.dbo.Linio
 SET City = LEFT("Shipping City", CHARINDEX(',', "Shipping City" + ',') - 1)
-
-ALTER TABLE PortfolioProject.dbo.Linio
-Add State NVARCHAR(50)
 
 UPDATE PortfolioProject.dbo.Linio
 SET State = STUFF("Shipping City", 1, LEN("Shipping City") + 2 - CHARINDEX(',', REVERSE("Shipping City")), '')
@@ -156,7 +132,6 @@ SET City = CASE WHEN State = 'Bogotá D.C.' THEN 'Bogotá D.C.'
      WHEN City = 'Ubaté' THEN 'Villa de San Diego de Ubaté'	
      ELSE City
      END
-From PortfolioProject.dbo.Linio
 
 --------------------------------------------------------------------------------------------------------------------------
 
@@ -175,6 +150,53 @@ SET FirstName = SUBSTRING("Billing Name", 1, CHARINDEX(' ', "Billing Name") -1)
 
 UPDATE PortfolioProject.dbo.Linio
 SET LastName = SUBSTRING("Billing Name", CHARINDEX(' ', "Billing Name") + 1 , LEN("Billing Name"))
+
+--------------------------------------------------------------------------------------------------------------------------
+
+-- Remove numbers from string
+
+SELECT
+REPLACE
+(REPLACE
+(REPLACE
+(REPLACE
+(REPLACE
+(REPLACE
+(REPLACE
+(REPLACE
+(REPLACE
+(REPLACE (LastName, '0', ''),
+'1', ''),
+'2', ''),
+'3', ''),
+'4', ''),
+'5', ''),
+'6', ''),
+'7', ''),
+'8', ''),
+'9', '') LastNameFixed
+From PortfolioProject.dbo.Linio
+
+UPDATE PortfolioProject.dbo.Linio
+SET LastName = REPLACE
+(REPLACE
+(REPLACE
+(REPLACE
+(REPLACE
+(REPLACE
+(REPLACE
+(REPLACE
+(REPLACE
+(REPLACE (LastName, '0', ''),
+'1', ''),
+'2', ''),
+'3', ''),
+'4', ''),
+'5', ''),
+'6', ''),
+'7', ''),
+'8', ''),
+'9', '')
 
 --------------------------------------------------------------------------------------------------------------------------
 
@@ -252,53 +274,6 @@ SET LastName = [dbo].[InitCap] ( LastName )
 
 --------------------------------------------------------------------------------------------------------------------------
 
--- Remove numbers from string
-
-SELECT
-REPLACE
-(REPLACE
-(REPLACE
-(REPLACE
-(REPLACE
-(REPLACE
-(REPLACE
-(REPLACE
-(REPLACE
-(REPLACE (LastName, '0', ''),
-'1', ''),
-'2', ''),
-'3', ''),
-'4', ''),
-'5', ''),
-'6', ''),
-'7', ''),
-'8', ''),
-'9', '') LastNameFixed
-From PortfolioProject.dbo.Linio
-
-UPDATE PortfolioProject.dbo.Linio
-SET LastName = REPLACE
-(REPLACE
-(REPLACE
-(REPLACE
-(REPLACE
-(REPLACE
-(REPLACE
-(REPLACE
-(REPLACE
-(REPLACE (LastName, '0', ''),
-'1', ''),
-'2', ''),
-'3', ''),
-'4', ''),
-'5', ''),
-'6', ''),
-'7', ''),
-'8', ''),
-'9', '')
-
---------------------------------------------------------------------------------------------------------------------------
-
 -- Populate Billing Phone Number Data
 
 Select "Billing Phone Number", ISNULL("Billing Phone Number", "Billing Phone Number2")
@@ -320,22 +295,17 @@ FROM PortfolioProject.dbo.Linio
 ORDER BY 1
 
 ALTER TABLE PortfolioProject.dbo.Linio
-ADD "Unit Price Before Tax" FLOAT
+ADD "Unit Price Before Tax" DECIMAL(10, 2)
+
+ALTER TABLE PortfolioProject.dbo.Linio
+DROP COLUMN "Unit Price Before Tax"
 
 UPDATE PortfolioProject.dbo.Linio
 SET "Unit Price Before Tax" = CAST("Unit Price" AS DECIMAL(10, 2))/1.19
 
-UPDATE PortfolioProject.dbo.Linio
-SET "Unit Price Before Tax" = CAST("Unit Price Before Tax" AS DECIMAL(10, 2))
-
 --------------------------------------------------------------------------------------------------------------------------
 
 -- Fixing values in "Fiscal Person" & "Document Type" fields
-
-SELECT "Fiscal Person", Count("Fiscal Person")
-From PortfolioProject.dbo.Linio
-Group by "Fiscal Person"
-Order by 1
 
 Select "Fiscal Person", 
 CASE WHEN "Fiscal Person" = 'Persona Juridica-1' THEN 'Jurídica'
@@ -347,11 +317,6 @@ Update PortfolioProject.dbo.Linio
 SET "Fiscal Person" = CASE WHEN "Fiscal Person" = 'Persona Juridica-1' THEN 'Jurídica'
 	 ELSE 'Natural'
 	 END
-
-SELECT "Document Type", Count("Document Type")
-FROM PortfolioProject.dbo.Linio
-GROUP BY "Document Type"
-ORDER BY 2 DESC
 
 Select "Document Type", 
 CASE WHEN "Document Type" = 'CÃ©dula de CiudadanÃ­a-13' THEN 'Cédula de ciudadanía'
@@ -394,16 +359,31 @@ SET "Tax Responsibility" = CASE WHEN "Customer Name" LIKE 'Iglesia%' THEN 'No re
 	 ELSE 'No responsable del IVA'
 	 END
 
+---------------------------------------------------------------------------------------------------------
+
+-- Deleting canceled or failed orders.
+
+Select Status, "Order Item Id", "Order Number"--, COUNT(Status)
+From PortfolioProject.dbo.Linio
+WHERE STATUS NOT IN ('delivered', 'ready_to_ship', 'shipped', 'pending')
+--WHERE STATUS <> 'delivered' and STATUS <> 'ready_to_ship' and STATUS <> 'shipped'
+--GROUP BY Status
+ORDER BY 1
+
+--DELETE
+--From PortfolioProject.dbo.Linio
+--WHERE Status in ('canceled', 'failed')
+
 -----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 -- Delete Unused Columns
 
-Select *
-From PortfolioProject.dbo.Linio
-Order by "Created at" DESC
+SELECT *
+FROM PortfolioProject.dbo.Linio
+ORDER BY "Created at"
 
 ALTER TABLE PortfolioProject.dbo.Linio
-DROP COLUMN "Shipping Address2", "Shipping Address4", "Billing Phone Number2",  "Billing Country", "Neighborhood", "Linio Id", "Billing Name", "Item Name", "Unit Price",  "Linio SKU", "Paid Price", "Receiver Legal Name", "Receiver Address", "Customer Name", "Billing Address", "Billing Address2", "Shipping Address3", "Shipping Address5", "Shipping Fee", "Shipping Name", "Updated at", "Order Source", "Invoice Required","Order Currency", "Shipping City", "Shipping Postcode", "Billing Address3", "Billing Address4", "Billing Address5", "Shipping Phone Number", "Shipping Phone Number2", "Billing City",  "Billing Postcode", "Payment Means ID", "Payment Means ID Code", "Tax Scheme Code", "Payer Obligations Code", "Customer Verifier Digit", "Receiver Type Regimen", "Receiver Postcode", "Receiver Commercial Name", "Receiver Region", "Receiver Municipality", "English name", "Reason", "Premium", "Promised shipping time", "Tracking URL", "Tracking Code", "CD Tracking Code", "Shipping Provider Type", "Shipping Provider", "CD Shipping Provider", "Variation", "Wallet Credits", "Payment Method"
+DROP COLUMN "Shipping Address4", "Billing Phone Number2",  "Billing Country", "Linio Id", "Billing Name", "Item Name", "Unit Price",  "Linio SKU", "Paid Price", "Receiver Legal Name", "Receiver Address", "Customer Name", "Billing Address", "Billing Address2", "Shipping Address3", "Shipping Address5", "Shipping Fee", "Shipping Name", "Updated at", "Order Source", "Invoice Required","Order Currency", "Shipping City", "Shipping Postcode", "Billing Address3", "Billing Address4", "Billing Address5", "Shipping Phone Number", "Shipping Phone Number2", "Billing City",  "Billing Postcode", "Payment Means ID", "Payment Means ID Code", "Tax Scheme Code", "Payer Obligations Code", "Customer Verifier Digit", "Receiver Type Regimen","Legal Id", "Receiver Postcode", "Receiver Commercial Name", "Receiver Region", "Receiver Municipality", "English name", Reason, Status, Premium, "Promised shipping time", "Tracking URL", "Tracking Code", "CD Tracking Code", "Shipping Provider Type", "Shipping Provider", "CD Shipping Provider", Variation, "Wallet Credits", "Payment Method"
 
 ---------------------------------------------------------------------------------------------------------
 
@@ -419,11 +399,11 @@ Select *,
 From PortfolioProject.dbo.Linio
 --Order by "National Registration Number"
 )
-Select *
-From RowNumCTE
-Where RowNum > 1
-Order by "National Registration Number"
-
---Delete 
+--Select *
 --From RowNumCTE
 --Where RowNum > 1
+--Order by "National Registration Number"
+
+Delete 
+From RowNumCTE
+Where RowNum > 1
