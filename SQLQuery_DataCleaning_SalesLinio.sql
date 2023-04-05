@@ -40,6 +40,7 @@ From PortfolioProject.dbo.Linio
 --Where "Shipment Type Name" = 'Own Warehouse'
 Where "Shipment Type Name" = 'Dropshipping'
 Order by "Created at" Desc
+
 --------------------------------------------------------------------------------------------------------------------------
 
 -- Concatenate shipping address columns into a string.
@@ -117,6 +118,8 @@ CASE WHEN State = 'Bogotá D.C.' THEN 'Bogotá D.C.'
      WHEN City = 'Medellin' THEN 'Medellín'
      WHEN City = 'San Antonio de Prado' THEN 'Medellín'
      WHEN City = 'Ubaté' THEN 'Villa de San Diego de Ubaté'	
+	 WHEN City = 'El Placer' THEN 'El Cerrito'
+	 WHEN City = 'Llorente ' THEN 'San Andrés de Tumaco'
      ELSE City
      END
 From PortfolioProject.dbo.Linio
@@ -319,8 +322,7 @@ SET "Fiscal Person" = CASE WHEN "Fiscal Person" = 'Persona Juridica-1' THEN 'Jur
 	 END
 
 Select "Document Type", 
-CASE WHEN "Document Type" = 'CÃ©dula de CiudadanÃ­a-13' THEN 'Cédula de ciudadanía'
-     WHEN "Document Type" = 'CÃ©dula de ExtranjerÃ­a-22' THEN 'Cédula de extranjería'
+CASE WHEN "Document Type" = 'CÃ©dula de ExtranjerÃ­a-22' THEN 'Cédula de extranjería'
 	 WHEN "Document Type" = 'Tarjeta de Identidad-12' THEN 'Tarjeta de identidad'
 	 WHEN "Document Type" = 'NIT-31' THEN 'Número de identificación tributaria'	   
 	 WHEN "Document Type" = 'Tarjeta de Extranjeria-21' THEN 'Tarjeta de extranjería'
@@ -331,8 +333,7 @@ CASE WHEN "Document Type" = 'CÃ©dula de CiudadanÃ­a-13' THEN 'Cédula de ciu
 From PortfolioProject.dbo.Linio
 
 Update PortfolioProject.dbo.Linio
-SET "Document Type" = CASE WHEN "Document Type" = 'CÃ©dula de CiudadanÃ­a-13' THEN 'Cédula de ciudadanía'
-     WHEN "Document Type" = 'CÃ©dula de ExtranjerÃ­a-22' THEN 'Cédula de extranjería'
+SET "Document Type" = CASE WHEN "Document Type" = 'CÃ©dula de ExtranjerÃ­a-22' THEN 'Cédula de extranjería'
 	 WHEN "Document Type" = 'Tarjeta de Identidad-12' THEN 'Tarjeta de identidad'
 	 WHEN "Document Type" = 'NIT-31' THEN 'Número de identificación tributaria'	   
 	 WHEN "Document Type" = 'Tarjeta de Extranjeria-21' THEN 'Tarjeta de extranjería'
