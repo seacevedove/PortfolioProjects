@@ -4,7 +4,7 @@ Cleaning Data in SQL Queries
 
 SELECT *
 FROM PortfolioProject.dbo.ML
---WHERE "Fecha de venta" LIKE '%marzo de 2023%'
+ORDER BY "# de venta" DESC
 
 ---------------------------------------------------------------------------------------------------------
 
@@ -16,12 +16,27 @@ FROM PortfolioProject.dbo.ML
 
 ---------------------------------------------------------------------------------------------------------
 
+-- Populate Address Data
+
+SELECT Domicilio, 
+CASE WHEN Domicilio = '' THEN 'Domicilio'
+	 ELSE Domicilio
+	 END
+FROM PortfolioProject.dbo.ML
+
+UPDATE PortfolioProject.dbo.ML
+SET Domicilio = CASE WHEN Domicilio = '' THEN 'Domicilio'
+	 ELSE Domicilio
+	 END
+
+---------------------------------------------------------------------------------------------------------
+
 -- Case Statement: Correcteted values in city & state fields
 
-SELECT DISTINCT (Estado1)--, COUNT(Estado1)
+SELECT DISTINCT (Estado1), COUNT(Estado1)
 FROM PortfolioProject.dbo.ML
---GROUP BY (Estado1)
-ORDER BY 1
+GROUP BY (Estado1)
+ORDER BY 2 DESC
 
 Select Estado1, 
 CASE When Estado1 = 'Bogota D.c' THEN 'Bogotá D.C.'
@@ -39,9 +54,9 @@ SET Estado1 = CASE When Estado1 = 'Bogota D.c' THEN 'Bogotá D.C.'
 	 END
 
 SELECT Distinct("Municipio o ciudad capital"), Count("Municipio o ciudad capital")
-From PortfolioProject.dbo.ML
-Group by "Municipio o ciudad capital"
-Order by 1
+FROM PortfolioProject.dbo.ML
+GROUP BY "Municipio o ciudad capital"
+ORDER BY 2 DESC
 
 SELECT "Municipio o ciudad capital", 
 CASE WHEN Estado1 = 'Bogotá D.C.' THEN 'Bogotá D.C.'
@@ -65,9 +80,10 @@ SET "Municipio o ciudad capital" = CASE WHEN Estado1 = 'Bogotá D.C.' THEN 'Bogo
 	 WHEN "Municipio o ciudad capital" = 'Medellin' THEN 'Medellín'
 	 WHEN "Municipio o ciudad capital" = 'San Antonio de Prado' THEN 'Medellín'
 	 WHEN "Municipio o ciudad capital" = 'Ubaté' THEN 'Villa de San Diego de Ubaté'
+	 WHEN "Municipio o ciudad capital" = 'El Placer' THEN 'El Cerrito'
+	 WHEN "Municipio o ciudad capital" = 'Llorente ' THEN 'San Andrés de Tumaco'
 	 ELSE "Municipio o ciudad capital"
 	 END
-FROM PortfolioProject.dbo.ML
 
 --------------------------------------------------------------------------------------------------------------------------
 
@@ -86,6 +102,22 @@ SET FirstName = SUBSTRING(Comprador, 1, CHARINDEX(' ', Comprador) - 1 )
 
 UPDATE PortfolioProject.dbo.ML
 SET LastName = SUBSTRING(Comprador, CHARINDEX(' ', Comprador) + 1 , LEN(Comprador))
+
+--------------------------------------------------------------------------------------------------------------------------
+
+-- String Functions: Trimming "FirstName" & "LastName"
+
+SELECT FirstName, TRIM(FirstName)
+FROM PortfolioProject.dbo.ML
+
+UPDATE PortfolioProject.dbo.ML
+SET FirstName = TRIM(FirstName)
+
+SELECT LastName, TRIM(LastName)
+FROM PortfolioProject.dbo.ML
+
+UPDATE PortfolioProject.dbo.ML
+SET LastName = TRIM(LastName)
 
 ---------------------------------------------------------------------------------------------------------
 
@@ -156,51 +188,39 @@ SELECT "Precio unitario de venta de la publicación (COP)", CAST("Precio unitari
 FROM PortfolioProject.dbo.ML
 
 ALTER TABLE PortfolioProject.dbo.ML
-ADD "Unit Price Before Tax" NVARCHAR(50)
+ADD "Unit Price Before Tax" DECIMAL(10, 2)
 
 UPDATE PortfolioProject.dbo.ML
 SET "Unit Price Before Tax" = CAST("Precio unitario de venta de la publicación (COP)" AS DECIMAL(10, 2))/1.19
-
-UPDATE PortfolioProject.dbo.ML
-SET "Unit Price Before Tax" = CAST("Unit Price Before Tax" AS DECIMAL(10, 2))
 
 -- Shipping Cost Before Tax
 
 SELECT REPLACE("Ingresos por envío (COP)", ',', '.')
 FROM PortfolioProject.dbo.ML
 
+UPDATE PortfolioProject.dbo.ML
+SET "Ingresos por envío (COP)" = REPLACE("Ingresos por envío (COP)", ',', '.')
+
+SELECT "Ingresos por envío (COP)",
+CASE WHEN "Ingresos por envío (COP)" = '' THEN NULL
+	 ELSE "Ingresos por envío (COP)"
+	 END
+FROM PortfolioProject.dbo.ML
+
+UPDATE PortfolioProject.dbo.ML
+SET "Ingresos por envío (COP)" = CASE WHEN "Ingresos por envío (COP)" = '' THEN NULL
+	 ELSE "Ingresos por envío (COP)"
+	 END
+
 ALTER TABLE PortfolioProject.dbo.ML
-ADD "Shipping Cost Before Tax" FLOAT
+ADD "Shipping Cost Before Tax" DECIMAL(10, 2)
 
 UPDATE PortfolioProject.dbo.ML
-SET "Shipping Cost Before Tax" = REPLACE("Ingresos por envío (COP)", ',', '.')
+SET "Shipping Cost Before Tax" = CAST("Ingresos por envío (COP)" AS FLOAT)/1.19
 
-SELECT "Shipping Cost Before Tax",
-CASE WHEN "Shipping Cost Before Tax" = '0' THEN "Shipping Cost Before Tax"
-	 ELSE CAST("Shipping Cost Before Tax" AS DECIMAL(10, 2))/1.19
-	 END
-FROM PortfolioProject.dbo.ML
-
-UPDATE PortfolioProject.dbo.ML
-SET "Shipping Cost Before Tax" = CASE WHEN "Shipping Cost Before Tax" = '0' THEN "Shipping Cost Before Tax"
-	 ELSE CAST("Shipping Cost Before Tax" AS DECIMAL(10, 2))/1.19
-	 END
-
-SELECT CASE WHEN "Shipping Cost Before Tax" = '0' THEN "Shipping Cost Before Tax"
-	        ELSE CAST("Shipping Cost Before Tax" AS DECIMAL(10, 2))
-	        END
-FROM PortfolioProject.dbo.ML
-
-UPDATE PortfolioProject.dbo.ML
-SET "Shipping Cost Before Tax" = CASE WHEN "Shipping Cost Before Tax" = '0' THEN "Shipping Cost Before Tax"
-	 ELSE CAST("Shipping Cost Before Tax" AS DECIMAL(10, 2))
-	 END
 -----------------------------------------------------------------------------------------------------------------------------------------------------------
--- Fixing values in ID type fields
 
-SELECT "Datos personales o de empresa", "Tipo y número de documento", Comprador, CC
-FROM PortfolioProject.dbo.ML
-WHERE "Tipo y número de documento" LIKE '%NIT%'
+-- Fixing values in ID type fields
 
 ALTER TABLE PortfolioProject.dbo.ML
 ADD "ID type" NVARCHAR (50), "Tipo de identificación" NVARCHAR(50), "Tipo de persona" NVARCHAR(50), "Responsabilidad Tributaria" NVARCHAR(50)
@@ -212,22 +232,42 @@ From PortfolioProject.dbo.ML
 UPDATE PortfolioProject.dbo.ML
 SET "ID type" = SUBSTRING("Tipo y número de documento", 1, CHARINDEX(' ', "Tipo y número de documento") - 1 )
 
+SELECT DISTINCT "ID type"
+FROM PortfolioProject.dbo.ML
+
 SELECT "ID type",
 CASE WHEN "ID type" = 'NIT' THEN 'NIT'
-     ELSE 'CC'
+     WHEN "ID type" = 'CE' THEN 'CE'
+	 ELSE 'CC'
 	 END
 FROM PortfolioProject.dbo.ML
 
 UPDATE PortfolioProject.dbo.ML
 SET "ID type" = CASE WHEN "ID type" = 'NIT' THEN 'NIT'
-     ELSE 'CC'
+     WHEN "ID type" = 'CE' THEN 'CE'
+	 ELSE 'CC'
 	 END
 
 -- ID type
+SELECT "ID type",
+CASE WHEN "ID type" = 'NIT' THEN 'Número de identificación tributaria'
+     WHEN "ID type" = 'CE' THEN 'Cédula de extranjería'
+	 WHEN "ID type" = 'TI' THEN 'Tarjeta de identidad'   
+	 WHEN "ID type" = 'TE' THEN 'Tarjeta de extranjería'
+	 WHEN "ID type" = 'RC' THEN 'Registro civil'
+	 WHEN "ID type" = 'Pasaporte-41' THEN 'Pasaporte'
+	 ELSE 'Cédula de ciudadanía'
+	 END
+FROM PortfolioProject.dbo.ML
 
 UPDATE PortfolioProject.dbo.ML
 SET "Tipo de identificación" = CASE WHEN "ID type" = 'NIT' THEN 'Número de identificación tributaria'
-     ELSE 'Cédula de ciudadanía'
+     WHEN "ID type" = 'CE' THEN 'Cédula de extranjería'
+	 WHEN "ID type" = 'TI' THEN 'Tarjeta de identidad'   
+	 WHEN "ID type" = 'TE' THEN 'Tarjeta de extranjería'
+	 WHEN "ID type" = 'RC' THEN 'Registro civil'
+	 WHEN "ID type" = 'Pasaporte-41' THEN 'Pasaporte'
+	 ELSE 'Cédula de ciudadanía'
 	 END
 
 -- Person type
@@ -257,12 +297,13 @@ SET "Responsabilidad Tributaria" = CASE WHEN Comprador LIKE 'Iglesia%' THEN 'No 
 
 -- Delete Unused Columns
 
-Select *
-From PortfolioProject.dbo.ML
+SELECT *
+FROM PortfolioProject.dbo.ML
+ORDER BY CC
+
 
 ALTER TABLE PortfolioProject.dbo.ML
-DROP COLUMN 
--- "Descripción del estado", "Paquete de varios productos", "Ingresos por productos (COP)", "Cargo por venta e impuestos", "Costos de envío", "Anulaciones y reembolsos (COP)", "Total (COP)", "Venta por publicidad", "SKU", "# de publicación", "Título de la publicación", "Variante", "Tipo de publicación", "Factura adjunta", "Datos personales o de empresa", "Tipo y número de documento", "Dirección", "Tipo de contribuyente", "Comprador", "Código postal", "Forma de entrega", "Fecha en camino", "Fecha entregado", "Transportista", "Número de seguimiento", "URL de seguimiento", "Forma de entrega1", "Fecha en camino1", "Fecha entregado1", "Transportista1", "Número de seguimiento1", "URL de seguimiento1", "Reclamo abierto", "Reclamo cerrado", "Con mediación", "ID type"
+DROP COLUMN "Ingresos por envío (COP)", "Precio unitario de venta de la publicación (COP)", "Descripción del estado", "Paquete de varios productos", "Ingresos por productos (COP)", "Cargo por venta e impuestos", "Costos de envío", "Anulaciones y reembolsos (COP)", "Total (COP)", "Venta por publicidad", "SKU", "# de publicación", "Título de la publicación", "Variante", "Tipo de publicación", "Factura adjunta", "Datos personales o de empresa", "Tipo y número de documento", "Dirección", "Tipo de contribuyente", "Comprador", "Código postal", "Forma de entrega", "Fecha en camino", "Fecha entregado", "Transportista", "Número de seguimiento", "URL de seguimiento", "Forma de entrega1", "Fecha en camino1", "Fecha entregado1", "Transportista1", "Número de seguimiento1", "URL de seguimiento1", "Reclamo abierto", "Reclamo cerrado", "Con mediación", "ID type"
 
 ---------------------------------------------------------------------------------------------------------
 
@@ -273,18 +314,18 @@ SELECT *,
 	ROW_NUMBER() OVER (
 	PARTITION BY CC
 				 ORDER BY
-					"Fecha de venta"
+					"# de venta"
 					) RowNum
 FROM PortfolioProject.dbo.ML
 --Order by "National Registration Number"
 )
 SELECT *
 FROM RowNumCTE
-WHERE RowNum > 1
-ORDER BY "Fecha de venta"
+WHERE RowNum > 1 OR CC = ''
+ORDER BY "# de venta"
 
 --DELETE 
 --FROM RowNumCTE
---WHERE RowNum > 1
+--WHERE RowNum > 1 OR CC = ''
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------
