@@ -293,17 +293,29 @@ SET "Responsabilidad Tributaria" = CASE WHEN Comprador LIKE 'Iglesia%' THEN 'No 
 	 ELSE 'No responsable del IVA'
 	 END
 
+---------------------------------------------------------------------------------------------------------
+
+-- Deleting canceled or failed orders.
+
+SELECT Estado, "# de venta"
+FROM PortfolioProject.dbo.ML
+WHERE Estado NOT IN ('En camino', 'Entregado', 'Mediación finalizada. Te dimos el dinero.', '')
+--WHERE Estado <> 'En camino' and Estado <> 'Entregado'
+ORDER BY 1
+
+--DELETE
+--FROM PortfolioProject.dbo.ML
+--WHERE "Total (COP)" = '0' AND Estado IN ('Cancelada por el comprador', 'Paquete cancelado por Mercado Libre', 'Devolución finalizada con reembolso al comprador')
+
 -----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 -- Delete Unused Columns
 
 SELECT *
 FROM PortfolioProject.dbo.ML
-ORDER BY CC
 
-
-ALTER TABLE PortfolioProject.dbo.ML
-DROP COLUMN "Ingresos por envío (COP)", "Precio unitario de venta de la publicación (COP)", "Descripción del estado", "Paquete de varios productos", "Ingresos por productos (COP)", "Cargo por venta e impuestos", "Costos de envío", "Anulaciones y reembolsos (COP)", "Total (COP)", "Venta por publicidad", "SKU", "# de publicación", "Título de la publicación", "Variante", "Tipo de publicación", "Factura adjunta", "Datos personales o de empresa", "Tipo y número de documento", "Dirección", "Tipo de contribuyente", "Comprador", "Código postal", "Forma de entrega", "Fecha en camino", "Fecha entregado", "Transportista", "Número de seguimiento", "URL de seguimiento", "Forma de entrega1", "Fecha en camino1", "Fecha entregado1", "Transportista1", "Número de seguimiento1", "URL de seguimiento1", "Reclamo abierto", "Reclamo cerrado", "Con mediación", "ID type"
+--ALTER TABLE PortfolioProject.dbo.ML
+--DROP COLUMN "Ingresos por envío (COP)", "Precio unitario de venta de la publicación (COP)", "Descripción del estado", "Paquete de varios productos", "Ingresos por productos (COP)", "Cargo por venta e impuestos", "Costos de envío", "Anulaciones y reembolsos (COP)", "Venta por publicidad", "# de publicación", "Título de la publicación", "Variante", "Tipo de publicación", "Factura adjunta", "Datos personales o de empresa", "Tipo y número de documento", "Dirección", "Tipo de contribuyente", "Comprador", "Código postal", "Forma de entrega", "Fecha en camino", "Fecha entregado", "Transportista", "Número de seguimiento", "URL de seguimiento", "Forma de entrega1", "Fecha en camino1", "Fecha entregado1", "Transportista1", "Número de seguimiento1", "URL de seguimiento1", "Reclamo abierto", "Reclamo cerrado", "Con mediación", "ID type"
 
 ---------------------------------------------------------------------------------------------------------
 
