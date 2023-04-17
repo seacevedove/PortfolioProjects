@@ -4,15 +4,53 @@ Cleaning Data in SQL Queries
 
 SELECT *
 FROM PortfolioProject.dbo.ML
-ORDER BY "# de venta" DESC
 
----------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------
 
--- Remove outdated information
+-- Standardize Date Format & Remove Outdated Information
+
+SELECT REPLACE("Fecha de venta", ' de marzo de 2023', '-2023-03')
+FROM PortfolioProject.dbo.ML
+
+UPDATE PortfolioProject.dbo.ML
+SET "Fecha de venta" = REPLACE("Fecha de venta", ' de marzo de 2023', '-2023-03')
 
 --DELETE
 --FROM PortfolioProject.dbo.ML
---Where "Fecha de venta" NOT LIKE '%marzo de 2023%'
+--WHERE "Fecha de venta" NOT LIKE '%2023-03%'
+
+SELECT
+SUBSTRING("Fecha de venta", 4, CHARINDEX(' ', "Fecha de venta") - 4 ) AS Year_Month, 
+SUBSTRING("Fecha de venta", CHARINDEX(' ', "Fecha de venta") + 1 , LEN("Fecha de venta")) AS Time
+FROM PortfolioProject.dbo.ML
+
+SELECT "Fecha de venta",
+	   LEFT("Fecha de venta", CHARINDEX('-', "Fecha de venta" + '-') - 1) AS Day
+FROM PortfolioProject.dbo.ML
+
+SELECT CONCAT(SUBSTRING("Fecha de venta", 4, CHARINDEX(' ', "Fecha de venta") - 4 ),'-',LEFT("Fecha de venta", CHARINDEX('-', "Fecha de venta" + '-') - 1),' ',SUBSTRING("Fecha de venta", CHARINDEX(' ', "Fecha de venta") + 1 , LEN("Fecha de venta")))
+FROM PortfolioProject.dbo.ML
+
+UPDATE PortfolioProject.dbo.ML
+SET "Fecha de venta" = CONCAT(SUBSTRING("Fecha de venta", 4, CHARINDEX(' ', "Fecha de venta") - 4 ),'-',LEFT("Fecha de venta", CHARINDEX('-', "Fecha de venta" + '-') - 1),' ',SUBSTRING("Fecha de venta", CHARINDEX(' ', "Fecha de venta") + 1 , LEN("Fecha de venta")))
+
+--------------------
+
+SELECT "Fecha de venta"
+FROM PortfolioProject.dbo.ML
+WHERE "Fecha de venta" LIKE '023-03%'
+
+SELECT "Fecha de venta",
+CASE WHEN "Fecha de venta" LIKE '023-03%' THEN REPLACE("Fecha de venta", '023-03', '2023-03')
+	 ELSE "Fecha de venta"
+	 END
+FROM PortfolioProject.dbo.ML
+ORDER BY "Fecha de venta"
+
+UPDATE PortfolioProject.dbo.ML
+SET "Fecha de venta" = CASE WHEN "Fecha de venta" LIKE '023-03%' THEN REPLACE("Fecha de venta", '023-03', '2023-03')
+	 ELSE "Fecha de venta"
+	 END
 
 ---------------------------------------------------------------------------------------------------------
 
@@ -297,15 +335,18 @@ SET "Responsabilidad Tributaria" = CASE WHEN Comprador LIKE 'Iglesia%' THEN 'No 
 
 -- Deleting canceled or failed orders.
 
-SELECT Estado, "# de venta"
+SELECT *--Estado, "# de venta"
 FROM PortfolioProject.dbo.ML
 WHERE Estado NOT IN ('En camino', 'Entregado', 'Mediación finalizada. Te dimos el dinero.', '')
---WHERE Estado <> 'En camino' and Estado <> 'Entregado'
-ORDER BY 1
+ORDER BY 2
 
---DELETE
---FROM PortfolioProject.dbo.ML
---WHERE "Total (COP)" = '0' AND Estado IN ('Cancelada por el comprador', 'Paquete cancelado por Mercado Libre', 'Devolución finalizada con reembolso al comprador')
+DELETE
+FROM PortfolioProject.dbo.ML
+WHERE "Total (COP)" <= '0' AND Estado IN ('Cancelada por el comprador', 'Paquete cancelado por Mercado Libre', 'Devolución finalizada con reembolso al comprador')
+
+DELETE
+FROM PortfolioProject.dbo.ML
+WHERE "Total (COP)" IS NULL AND Estado IN ('Cancelada por el comprador', 'Paquete cancelado por Mercado Libre', 'Devolución finalizada con reembolso al comprador')
 
 -----------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -314,19 +355,19 @@ ORDER BY 1
 SELECT *
 FROM PortfolioProject.dbo.ML
 
---ALTER TABLE PortfolioProject.dbo.ML
---DROP COLUMN "Ingresos por envío (COP)", "Precio unitario de venta de la publicación (COP)", "Descripción del estado", "Paquete de varios productos", "Ingresos por productos (COP)", "Cargo por venta e impuestos", "Costos de envío", "Anulaciones y reembolsos (COP)", "Venta por publicidad", "# de publicación", "Título de la publicación", "Variante", "Tipo de publicación", "Factura adjunta", "Datos personales o de empresa", "Tipo y número de documento", "Dirección", "Tipo de contribuyente", "Comprador", "Código postal", "Forma de entrega", "Fecha en camino", "Fecha entregado", "Transportista", "Número de seguimiento", "URL de seguimiento", "Forma de entrega1", "Fecha en camino1", "Fecha entregado1", "Transportista1", "Número de seguimiento1", "URL de seguimiento1", "Reclamo abierto", "Reclamo cerrado", "Con mediación", "ID type"
+ALTER TABLE PortfolioProject.dbo.ML
+DROP COLUMN "Total (COP)", "Ingresos por envío (COP)", "Precio unitario de venta de la publicación (COP)", "Descripción del estado", "Paquete de varios productos", "Ingresos por productos (COP)", "Cargo por venta e impuestos", "Costos de envío", "Anulaciones y reembolsos (COP)", "Venta por publicidad", "# de publicación", "Título de la publicación", "Variante", "Tipo de publicación", "Factura adjunta", "Datos personales o de empresa", "Tipo y número de documento", "Dirección", "Tipo de contribuyente", "Comprador", "Código postal", "Forma de entrega", "Fecha en camino", "Fecha entregado", "Transportista", "Número de seguimiento", "URL de seguimiento", "Forma de entrega1", "Fecha en camino1", "Fecha entregado1", "Transportista1", "Número de seguimiento1", "URL de seguimiento1", "Reclamo abierto", "Reclamo cerrado", "Con mediación", "ID type"
 
 ---------------------------------------------------------------------------------------------------------
 
--- Remove Duplicates
+-- Remove Duplicates for Client Creation
 
 WITH RowNumCTE AS(
 SELECT *, 
 	ROW_NUMBER() OVER (
 	PARTITION BY CC
 				 ORDER BY
-					"# de venta"
+					"Fecha de venta"
 					) RowNum
 FROM PortfolioProject.dbo.ML
 --Order by "National Registration Number"
@@ -334,10 +375,85 @@ FROM PortfolioProject.dbo.ML
 SELECT *
 FROM RowNumCTE
 WHERE RowNum > 1 OR CC = ''
-ORDER BY "# de venta"
+ORDER BY RowNum
 
 --DELETE 
 --FROM RowNumCTE
 --WHERE RowNum > 1 OR CC = ''
+
+---------------------------------------------------------------------------------------------------------
+
+-- Filling Down In SQL for Invoice Bulk Upload
+
+SELECT CC,
+CASE WHEN CC = '' THEN NULL
+	 ELSE CC
+	 END
+FROM PortfolioProject.dbo.ML
+
+UPDATE PortfolioProject.dbo.ML
+SET CC = CASE WHEN CC = '' THEN NULL
+	 ELSE CC
+	 END
+
+--
+
+WITH CTE_grouped_table AS(
+SELECT "Fecha de venta",
+	   CC,
+       COUNT (CC) OVER (
+	   ORDER BY "Fecha de venta"
+	   ) AS GRCC
+FROM PortfolioProject.dbo.ML
+), CTE_final_table AS (
+SELECT "Fecha de venta",
+	   CC,
+	   GRCC,
+	   FIRST_VALUE (CC) OVER (PARTITION BY GRCC ORDER BY "Fecha de venta") AS CC_filled
+FROM CTE_grouped_table
+)
+SELECT "Fecha de venta",
+	   CC, 
+       CC_filled
+FROM CTE_final_table
+
+--UPDATE CTE_final_table
+--SET CC = CC_filled
+
+---------------------------------------------------------------------------------------------------------
+
+-- Group CC values
+
+ALTER TABLE PortfolioProject.dbo.ML
+ADD CC_Group NVARCHAR (50)
+
+WITH CTE_grouped_table AS(
+SELECT "Fecha de venta",
+	   CC,
+	   CC_Group,
+       COUNT (CC) OVER (
+	   ORDER BY "Fecha de venta"
+	   ) AS CC_Group_Filled
+FROM PortfolioProject.dbo.ML
+)
+--SELECT "Fecha de venta",
+--	   CC, 
+--       CC_Group_Filled
+--FROM CTE_grouped_table
+
+UPDATE CTE_grouped_table
+SET CC_Group = CC_Group_Filled
+
+---------------------------------------------------------------------------------------------------------
+
+-- Remove NULL values for Invoice Bulk Upload
+
+SELECT *
+FROM PortfolioProject.dbo.ML
+WHERE Unidades IS NULL AND "Shipping Cost Before Tax" IS NULL
+
+--DELETE 
+--FROM PortfolioProject.dbo.ML
+--WHERE Unidades IS NULL AND "Shipping Cost Before Tax" IS NULL
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------
