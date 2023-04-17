@@ -15,9 +15,9 @@ FROM PortfolioProject.dbo.ML
 UPDATE PortfolioProject.dbo.ML
 SET "Fecha de venta" = REPLACE("Fecha de venta", ' de marzo de 2023', '-2023-03')
 
---DELETE
---FROM PortfolioProject.dbo.ML
---WHERE "Fecha de venta" NOT LIKE '%2023-03%'
+DELETE
+FROM PortfolioProject.dbo.ML
+WHERE "Fecha de venta" NOT LIKE '%2023-03%'
 
 SELECT
 SUBSTRING("Fecha de venta", 4, CHARINDEX(' ', "Fecha de venta") - 4 ) AS Year_Month, 
@@ -33,12 +33,6 @@ FROM PortfolioProject.dbo.ML
 
 UPDATE PortfolioProject.dbo.ML
 SET "Fecha de venta" = CONCAT(SUBSTRING("Fecha de venta", 4, CHARINDEX(' ', "Fecha de venta") - 4 ),'-',LEFT("Fecha de venta", CHARINDEX('-', "Fecha de venta" + '-') - 1),' ',SUBSTRING("Fecha de venta", CHARINDEX(' ', "Fecha de venta") + 1 , LEN("Fecha de venta")))
-
---------------------
-
-SELECT "Fecha de venta"
-FROM PortfolioProject.dbo.ML
-WHERE "Fecha de venta" LIKE '023-03%'
 
 SELECT "Fecha de venta",
 CASE WHEN "Fecha de venta" LIKE '023-03%' THEN REPLACE("Fecha de venta", '023-03', '2023-03')
@@ -362,7 +356,7 @@ DROP COLUMN "Total (COP)", "Ingresos por envío (COP)", "Precio unitario de vent
 
 -- Remove Duplicates for Client Creation
 
-WITH RowNumCTE AS(
+WITH CTE_RowNum AS(
 SELECT *, 
 	ROW_NUMBER() OVER (
 	PARTITION BY CC
@@ -373,7 +367,7 @@ FROM PortfolioProject.dbo.ML
 --Order by "National Registration Number"
 )
 SELECT *
-FROM RowNumCTE
+FROM CTE_RowNum
 WHERE RowNum > 1 OR CC = ''
 ORDER BY RowNum
 
